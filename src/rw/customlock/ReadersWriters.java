@@ -1,28 +1,45 @@
-package rw.customlock;
+package multithreading.concurrency.rw.customlock;
 
 
-class CustomReadWriteLock {
+class NotReentrantReadWriteLock {
 
-	public void lockRead() {
+	private int readers = 0;
 
+	private int writers = 0;
+
+	private int writeRequests = 0;
+
+	public synchronized void lockRead() throws InterruptedException {
+		while (writers > 0 || writeRequests > 0) {
+			wait();
+		}
+		readers++;
 	}
 
-	public void unlockRead() {
-
+	public synchronized void unlockRead() {
+		readers--;
+		notifyAll();
 	}
 
-	public void lockWrite() {
+	public synchronized void lockWrite() throws InterruptedException {
+		writeRequests++;
 
+		while (readers > 0 || writers > 0) {
+			wait();
+		}
+		writeRequests--;
+		writers++;
 	}
 
-	public void unlockWrite() {
-
+	public synchronized void unlockWrite() throws InterruptedException {
+		writers--;
+		notifyAll();
 	}
 }
 
 class Buffer<T> {
 
-	private CustomReadWriteLock readWriteLock = new CustomReadWriteLock();
+	private NotReentrantReadWriteLock readWriteLock = new NotReentrantReadWriteLock();
 
 	public void write(T object) throws InterruptedException {
 		try {
@@ -114,7 +131,8 @@ public class ReadersWriters {
 		new Thread(new Reader(1, sharedBuffer)).start();
 		new Thread(new Reader(700, sharedBuffer)).start();
 		new Thread(new Reader(100, sharedBuffer)).start();
-		new Thread(new Writter(200, sharedBuffer)).start();
-		new Thread(new Writter(400, sharedBuffer)).start();
+		new Thread(new Writter(2000, sharedBuffer)).start();
+		new Thread(new Writter(5000, sharedBuffer)).start();
 	}
 }
+
