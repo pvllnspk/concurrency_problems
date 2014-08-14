@@ -1,4 +1,4 @@
-package multithreading.concurrency.rw.waitnotify;
+package rw.waitnotify;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

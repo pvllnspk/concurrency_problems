@@ -1,4 +1,4 @@
-package multithreading.concurrency.cp.bqueue;
+package cp.bqueue;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;

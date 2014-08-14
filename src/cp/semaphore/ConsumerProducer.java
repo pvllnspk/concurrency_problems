@@ -1,4 +1,4 @@
-package multithreading.concurrency.cp.semaphore;
+package cp.semaphore;
 
 import java.util.LinkedList;
 import java.util.List;

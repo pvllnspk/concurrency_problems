@@ -1,11 +1,19 @@
-package multithreading.concurrency.cp.waitnotify;
+package cp.locks;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 class BlockingQueue<T> {
 
 	private final List<T> queue = new LinkedList<T>();
+
+	private final ReentrantLock lock = new ReentrantLock();
+
+	private Condition emptyQueue = lock.newCondition();
+
+	private Condition fullQueue = lock.newCondition();
 
 	private int capacity = 10;
 
@@ -13,28 +21,44 @@ class BlockingQueue<T> {
 		this.capacity = capacity;
 	}
 
-	public synchronized void put(T object) throws InterruptedException {
-		while (queue.size() == capacity) {
-			wait();
-		}
-		if (queue.size() == 0) {
-			notifyAll();
-		}
-		queue.add(object);
+	public void put(T object) throws InterruptedException {
+		try {
+			lock.lock();
 
-		System.out.println("Consumer #" + Thread.currentThread().getId() + " put  " + queue.size());
+			while (queue.size() == capacity) {
+				fullQueue.await();
+			}
+			if (queue.size() == 0) {
+				emptyQueue.signalAll();
+			}
+			queue.add(object);
+
+			System.out.println("Consumer #" + Thread.currentThread().getId() + " put  " + queue.size());
+
+		} finally {
+
+			lock.unlock();
+		}
 	}
 
-	public synchronized T take() throws InterruptedException {
-		while (queue.size() == 0) {
-			wait();
-		}
-		if (queue.size() == capacity) {
-			notifyAll();
-		}
-		System.out.println("Producer #" + Thread.currentThread().getId() + " take " + (queue.size() - 1));
+	public T take() throws InterruptedException {
+		try {
+			lock.lock();
 
-		return queue.remove(0);
+			while (queue.size() == 0) {
+				emptyQueue.await();
+			}
+			if (queue.size() == capacity) {
+				fullQueue.signalAll();
+			}
+			System.out.println("Producer #" + Thread.currentThread().getId() + " take " + (queue.size() - 1));
+
+			return queue.remove(0);
+
+		} finally {
+
+			lock.unlock();
+		}
 	}
 }
 
